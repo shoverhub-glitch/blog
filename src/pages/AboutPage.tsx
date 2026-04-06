@@ -64,7 +64,7 @@ export const AboutPage = () => {
           </h1>
           <p style={{
             fontFamily: theme.typography.displayFont,
-            fontSize: '1.25rem',
+            fontSize: isMobile ? '1rem' : '1.25rem',
             color: theme.colors.accent,
             fontWeight: 600,
           }}>
@@ -74,7 +74,7 @@ export const AboutPage = () => {
 
         <section style={{ marginBottom: '3rem' }}>
           <p style={{
-            fontSize: '1.125rem',
+            fontSize: isMobile ? '1rem' : '1.125rem',
             lineHeight: 1.8,
             color: theme.colors.textSecondary,
             marginBottom: '1.5rem',
@@ -84,7 +84,7 @@ export const AboutPage = () => {
             and create meaningful experiences.
           </p>
           <p style={{
-            fontSize: '1.125rem',
+            fontSize: isMobile ? '1rem' : '1.125rem',
             lineHeight: 1.8,
             color: theme.colors.textSecondary,
           }}>
@@ -97,7 +97,7 @@ export const AboutPage = () => {
         <section style={{ marginBottom: '3rem' }}>
           <h2 style={{
             fontFamily: theme.typography.displayFont,
-            fontSize: '1.75rem',
+            fontSize: isMobile ? '1.375rem' : '1.75rem',
             fontWeight: 700,
             color: theme.colors.text,
             marginBottom: '1.5rem',
@@ -175,7 +175,7 @@ export const AboutPage = () => {
         <section style={{ marginBottom: '3rem' }}>
           <h2 style={{
             fontFamily: theme.typography.displayFont,
-            fontSize: '1.75rem',
+            fontSize: isMobile ? '1.375rem' : '1.75rem',
             fontWeight: 700,
             color: theme.colors.text,
             marginBottom: '1.5rem',
@@ -183,7 +183,7 @@ export const AboutPage = () => {
             Our Mission
           </h2>
           <p style={{
-            fontSize: '1.125rem',
+            fontSize: isMobile ? '1rem' : '1.125rem',
             lineHeight: 1.8,
             color: theme.colors.textSecondary,
             marginBottom: '1.5rem',
@@ -192,7 +192,7 @@ export const AboutPage = () => {
             Our mission is to provide a sanctuary for thoughtful readers who seek depth, nuance, and perspective in their daily consumption.
           </p>
           <p style={{
-            fontSize: '1.125rem',
+            fontSize: isMobile ? '1rem' : '1.125rem',
             lineHeight: 1.8,
             color: theme.colors.textSecondary,
           }}>
@@ -205,12 +205,12 @@ export const AboutPage = () => {
           background: theme.colors.surface,
           border: `1px solid ${theme.colors.border}`,
           borderRadius: theme.borderRadius.lg,
-          padding: '2rem',
+          padding: isMobile ? '1.5rem' : '2rem',
           textAlign: 'center',
         }}>
           <h2 style={{
             fontFamily: theme.typography.displayFont,
-            fontSize: '1.5rem',
+            fontSize: isMobile ? '1.25rem' : '1.5rem',
             fontWeight: 700,
             color: theme.colors.text,
             marginBottom: '1rem',
@@ -232,7 +232,7 @@ export const AboutPage = () => {
               gap: '0.5rem',
               padding: '0.75rem 1.5rem',
               backgroundColor: theme.colors.primary,
-              color: '#fff',
+              color: theme.colors.background,
               borderRadius: theme.borderRadius.md,
               textDecoration: 'none',
               fontWeight: 600,

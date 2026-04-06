@@ -54,7 +54,7 @@ export const AdminDashboard = () => {
   const gridStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-    gap: theme.spacing.xl,
+    gap: theme.spacing.lg,
     marginBottom: theme.spacing['3xl'],
   };
 
@@ -116,7 +116,7 @@ export const AdminDashboard = () => {
         }
       >
 
-        <div style={gridStyle}>
+        <div style={gridStyle} className="admin-dashboard-grid">
           <Link
             to="/shover-admin/blogs"
             style={cardStyle}
@@ -179,6 +179,8 @@ export const AdminDashboard = () => {
               <p style={cardDescStyle}>Add, edit, or remove blog categories</p>
             </div>
           </Link>
+
+
         </div>
       </AdminPageShell>
     </>

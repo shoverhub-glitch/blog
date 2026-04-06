@@ -9,7 +9,7 @@ export const Footer = () => {
   const linkStyle: React.CSSProperties = {
     color: theme.colors.textMuted,
     textDecoration: 'none',
-    fontSize: '0.875rem',
+    fontSize: isMobile ? '0.9375rem' : '0.875rem',
     fontWeight: 500,
     transition: 'color 0.2s',
   };

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../theme/ThemeContext';
 import { AdminSEO } from '../components/AdminSEO';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { AlertCircle, Loader } from 'lucide-react';
+import { AlertCircle, Loader, ExternalLink } from 'lucide-react';
 
 export const AdminLoginPage = () => {
   const { theme } = useTheme();
@@ -23,8 +23,9 @@ export const AdminLoginPage = () => {
     try {
       await signIn(email, password);
       navigate('/shover-admin/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -47,6 +48,26 @@ export const AdminLoginPage = () => {
     border: `1px solid ${theme.colors.border}`,
     padding: theme.spacing['2xl'],
     boxShadow: theme.shadows.lg,
+    position: 'relative',
+  };
+
+  const viewSiteStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+    borderRadius: theme.borderRadius.md,
+    border: `1px solid ${theme.colors.border}`,
+    backgroundColor: 'transparent',
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: 500,
+    textDecoration: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   };
 
   const titleStyle: React.CSSProperties = {
@@ -96,7 +117,7 @@ export const AdminLoginPage = () => {
     borderRadius: theme.borderRadius.md,
     border: 'none',
     backgroundColor: theme.colors.accent,
-    color: '#ffffff',
+    color: theme.colors.background,
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     cursor: loading ? 'not-allowed' : 'pointer',
@@ -109,9 +130,9 @@ export const AdminLoginPage = () => {
   };
 
   const errorStyle: React.CSSProperties = {
-    backgroundColor: '#fee2e2',
-    border: `1px solid #fca5a5`,
-    color: '#991b1b',
+    backgroundColor: theme.colors.errorLight,
+    border: `1px solid ${theme.colors.error}`,
+    color: theme.colors.error,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     display: 'flex',
@@ -128,6 +149,24 @@ export const AdminLoginPage = () => {
       <AdminSEO title="Login" />
       <div style={containerStyle}>
       <div style={cardStyle}>
+        <a
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={viewSiteStyle}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = theme.colors.accent;
+            e.currentTarget.style.borderColor = theme.colors.accent;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = theme.colors.textMuted;
+            e.currentTarget.style.borderColor = theme.colors.border;
+          }}
+        >
+          <ExternalLink size={14} />
+          View Site
+        </a>
+
         <p style={{
           fontSize: '0.72rem',
           letterSpacing: '0.14em',

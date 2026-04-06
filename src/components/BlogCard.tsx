@@ -72,7 +72,7 @@ export const BlogCard = ({ blog, variant = 'default' }: BlogCardProps) => {
               {blog.category && (
                 <span style={{
                   display: 'inline-block',
-                  fontSize: '0.625rem',
+                  fontSize: isMobile ? '0.6875rem' : '0.625rem',
                   fontWeight: 600,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
@@ -109,7 +109,7 @@ export const BlogCard = ({ blog, variant = 'default' }: BlogCardProps) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#fff',
+                  color: theme.colors.background,
                 }}>
                   <ArrowUpRight size={12} />
                 </span>

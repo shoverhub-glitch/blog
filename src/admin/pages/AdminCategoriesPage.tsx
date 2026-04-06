@@ -102,12 +102,13 @@ export const AdminCategoriesPage = () => {
   const buttonStyle = (variant: 'primary' | 'secondary' = 'primary'): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: theme.spacing.sm,
     padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
     borderRadius: theme.borderRadius.md,
     border: 'none',
     backgroundColor: variant === 'primary' ? theme.colors.accent : 'transparent',
-    color: variant === 'primary' ? '#fff' : theme.colors.text,
+    color: variant === 'primary' ? theme.colors.background : theme.colors.text,
     cursor: 'pointer',
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.medium,
@@ -121,23 +122,31 @@ export const AdminCategoriesPage = () => {
     overflow: 'hidden',
   };
 
+  const tableWrapperStyle: React.CSSProperties = {
+    width: '100%',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+  };
+
   const tableStyle: React.CSSProperties = {
     width: '100%',
     borderCollapse: 'collapse',
+    minWidth: '600px',
   };
 
   const thStyle: React.CSSProperties = {
-    padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
+    padding: `${theme.spacing.md} ${theme.spacing.lg}`,
     textAlign: 'left',
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textMuted,
     borderBottom: `1px solid ${theme.colors.border}`,
     backgroundColor: theme.colors.background,
+    whiteSpace: 'nowrap',
   };
 
   const tdStyle: React.CSSProperties = {
-    padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
+    padding: `${theme.spacing.md} ${theme.spacing.lg}`,
     borderBottom: `1px solid ${theme.colors.border}`,
   };
 
@@ -215,7 +224,7 @@ export const AdminCategoriesPage = () => {
       >
 
       {error && (
-        <div style={{ padding: theme.spacing.lg, backgroundColor: '#fef2f2', borderRadius: theme.borderRadius.md, marginBottom: theme.spacing.xl, color: '#dc2626' }}>
+        <div style={{ padding: theme.spacing.lg, backgroundColor: theme.colors.errorLight, borderRadius: theme.borderRadius.md, marginBottom: theme.spacing.xl, color: theme.colors.error }}>
           {error}
         </div>
       )}
@@ -231,66 +240,68 @@ export const AdminCategoriesPage = () => {
             <p>No categories yet. Create your first category!</p>
           </div>
         ) : (
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Slug</th>
-                <th style={thStyle}>Description</th>
-                <th style={{ ...thStyle, width: '120px' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((category) => (
-                <tr key={category.id}>
-                  <td style={tdStyle}>
-                    <span style={{ fontWeight: theme.typography.fontWeight.medium }}>{category.name}</span>
-                  </td>
-                  <td style={{ ...tdStyle, color: theme.colors.textMuted, fontFamily: 'monospace' }}>
-                    {category.slug}
-                  </td>
-                  <td style={{ ...tdStyle, color: theme.colors.textSecondary, maxWidth: '300px' }}>
-                    {category.description || '-'}
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: theme.spacing.sm }}>
-                      <button
-                        style={actionButtonStyle}
-                        onClick={() => openModal(category)}
-                        title="Edit"
-                      >
-                        <Pencil size={16} color={theme.colors.primary} />
-                      </button>
-                      {deleteConfirm === category.id ? (
-                        <div style={{ display: 'flex', gap: theme.spacing.xs, alignItems: 'center' }}>
+          <div style={tableWrapperStyle} className="admin-table-responsive">
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Name</th>
+                  <th style={thStyle}>Slug</th>
+                  <th style={thStyle}>Description</th>
+                  <th style={{ ...thStyle, width: '120px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category) => (
+                  <tr key={category.id}>
+                    <td style={tdStyle}>
+                      <span style={{ fontWeight: theme.typography.fontWeight.medium }}>{category.name}</span>
+                    </td>
+                    <td style={{ ...tdStyle, color: theme.colors.textMuted, fontFamily: 'monospace' }}>
+                      {category.slug}
+                    </td>
+                    <td style={{ ...tdStyle, color: theme.colors.textSecondary, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {category.description || '-'}
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+                        <button
+                          style={actionButtonStyle}
+                          onClick={() => openModal(category)}
+                          title="Edit"
+                        >
+                          <Pencil size={16} color={theme.colors.primary} />
+                        </button>
+                        {deleteConfirm === category.id ? (
+                          <div style={{ display: 'flex', gap: theme.spacing.xs, alignItems: 'center' }}>
                           <button
-                            style={{ ...actionButtonStyle, backgroundColor: '#dc2626', color: '#fff' }}
+                            style={{ ...actionButtonStyle, backgroundColor: theme.colors.error, color: theme.colors.background }}
                             onClick={() => handleDelete(category.id)}
                           >
                             Yes
                           </button>
+                            <button
+                              style={actionButtonStyle}
+                              onClick={() => setDeleteConfirm(null)}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
                           <button
                             style={actionButtonStyle}
-                            onClick={() => setDeleteConfirm(null)}
+                            onClick={() => setDeleteConfirm(category.id)}
+                            title="Delete"
                           >
-                            <X size={16} />
+                            <Trash2 size={16} color="#dc2626" />
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          style={actionButtonStyle}
-                          onClick={() => setDeleteConfirm(category.id)}
-                          title="Delete"
-                        >
-                          <Trash2 size={16} color="#dc2626" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -308,7 +319,7 @@ export const AdminCategoriesPage = () => {
 
             <form onSubmit={handleSubmit}>
               {formError && (
-                <div style={{ padding: theme.spacing.md, backgroundColor: '#fef2f2', borderRadius: theme.borderRadius.md, marginBottom: theme.spacing.lg, color: '#dc2626', fontSize: theme.typography.fontSize.sm }}>
+                <div style={{ padding: theme.spacing.md, backgroundColor: theme.colors.errorLight, borderRadius: theme.borderRadius.md, marginBottom: theme.spacing.lg, color: theme.colors.error, fontSize: theme.typography.fontSize.sm }}>
                   {formError}
                 </div>
               )}
@@ -345,17 +356,17 @@ export const AdminCategoriesPage = () => {
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: theme.spacing.md, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: theme.spacing.md, justifyContent: 'flex-end', flexWrap: 'wrap' }} className="admin-btn-group">
                 <button
                   type="button"
-                  style={buttonStyle('secondary')}
+                  style={{ ...buttonStyle('secondary'), flex: '1 1 auto', minWidth: '100px', justifyContent: 'center' }}
                   onClick={closeModal}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ ...buttonStyle(), opacity: formLoading ? 0.6 : 1 }}
+                  style={{ ...buttonStyle(), opacity: formLoading ? 0.6 : 1, flex: '1 1 auto', minWidth: '100px', justifyContent: 'center' }}
                   disabled={formLoading}
                 >
                   {formLoading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : null}

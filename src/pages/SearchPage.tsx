@@ -199,26 +199,26 @@ export const SearchPage = () => {
         ) : (
           <div style={{
             textAlign: 'center',
-            padding: '6rem 2rem',
+            padding: isMobile ? '4rem 1.5rem' : '6rem 2rem',
             background: theme.colors.surface,
             borderRadius: '12px',
             border: `1px solid ${theme.colors.border}`,
           }}>
             <div style={{
-              width: '80px',
-              height: '80px',
+              width: isMobile ? '64px' : '80px',
+              height: isMobile ? '64px' : '80px',
               background: theme.colors.borderLight,
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 2rem',
+              margin: '0 auto 1.5rem',
             }}>
-              <X size={32} color={theme.colors.textMuted} />
+              <X size={isMobile ? 28 : 32} color={theme.colors.textMuted} />
             </div>
             <h2 style={{
               fontFamily: theme.typography.displayFont,
-              fontSize: '1.75rem',
+              fontSize: isMobile ? '1.375rem' : '1.75rem',
               fontWeight: 700,
               color: theme.colors.text,
               margin: '0 0 0.75rem',

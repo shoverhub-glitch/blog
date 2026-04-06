@@ -40,6 +40,7 @@ export interface Blog {
   published_at: string;
   created_at: string;
   updated_at: string;
+  tags: string;
   category?: Category;
-  tags?: Tag[];
+  tags_list?: Tag[];
 }

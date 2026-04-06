@@ -14,7 +14,7 @@ export const PrivacyPolicyPage = () => {
 
   const headingStyle: React.CSSProperties = {
     fontFamily: theme.typography.displayFont,
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.25rem' : '1.5rem',
     fontWeight: 700,
     color: theme.colors.text,
     marginBottom: '1rem',
@@ -101,7 +101,7 @@ export const PrivacyPolicyPage = () => {
           <h2 style={headingStyle}>Information We Collect</h2>
           <p style={paragraphStyle}>We collect several types of information for various purposes to provide and improve our service to you:</p>
           
-          <h3 style={{ ...headingStyle, fontSize: '1.25rem' }}>Personal Data</h3>
+          <h3 style={{ ...headingStyle, fontSize: isMobile ? '1.125rem' : '1.25rem' }}>Personal Data</h3>
           <p style={paragraphStyle}>While using our Site, we may ask you to provide us with certain personally identifiable information that can be used to contact or identify you ("Personal Data"). Personally identifiable information may include:</p>
           <ul style={listStyle}>
             <li>Email address</li>
@@ -109,7 +109,7 @@ export const PrivacyPolicyPage = () => {
             <li>Cookies and usage data</li>
           </ul>
 
-          <h3 style={{ ...headingStyle, fontSize: '1.25rem' }}>Usage Data</h3>
+          <h3 style={{ ...headingStyle, fontSize: isMobile ? '1.125rem' : '1.25rem' }}>Usage Data</h3>
           <p style={paragraphStyle}>
             We may also collect information on how the Site is accessed and used ("Usage Data"). 
             This Usage Data may include information such as your computer's Internet Protocol address, 
@@ -150,13 +150,13 @@ export const PrivacyPolicyPage = () => {
           </p>
           <p style={paragraphStyle}>These third parties have access to your Personal Data only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
           
-          <h3 style={{ ...headingStyle, fontSize: '1.25rem' }}>Google Analytics</h3>
+          <h3 style={{ ...headingStyle, fontSize: isMobile ? '1.125rem' : '1.25rem' }}>Google Analytics</h3>
           <p style={paragraphStyle}>
             We use Google Analytics to monitor and analyze the use of our Site. Google Analytics is a web analytics service 
             offered by Google that tracks and reports website traffic.
           </p>
 
-          <h3 style={{ ...headingStyle, fontSize: '1.25rem' }}>Google AdSense</h3>
+          <h3 style={{ ...headingStyle, fontSize: isMobile ? '1.125rem' : '1.25rem' }}>Google AdSense</h3>
           <p style={paragraphStyle}>
             We use Google AdSense to display advertisements on our Site. Google AdSense uses cookies to serve ads 
             based on your prior visits to our Site and other websites.

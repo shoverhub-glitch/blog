@@ -74,8 +74,9 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message || 'Sign in failed');
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Sign in failed');
       throw err;
     }
   };
@@ -87,8 +88,9 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
       if (error) throw error;
       setUser(null);
       setIsAdmin(false);
-    } catch (err: any) {
-      setError(err.message || 'Sign out failed');
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Sign out failed');
       throw err;
     }
   };

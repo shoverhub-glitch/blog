@@ -2,7 +2,7 @@ import { supabase, Blog, Category, Tag } from '../lib/supabase';
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 const getCached = <T>(key: string): T | null => {
   const cached = cache.get(key);
@@ -12,7 +12,7 @@ const getCached = <T>(key: string): T | null => {
   return null;
 };
 
-const setCache = (key: string, data: any) => {
+const setCache = (key: string, data: unknown) => {
   cache.set(key, { data, timestamp: Date.now() });
 };
 
@@ -72,7 +72,7 @@ export const blogService = {
     if (error) throw error;
 
     if (data && data.blog_tags) {
-      data.tags = data.blog_tags.map((bt: any) => bt.tag);
+      data.tags = data.blog_tags.map((bt: { tag: Tag }) => bt.tag);
       delete data.blog_tags;
     }
 
@@ -87,6 +87,9 @@ export const blogService = {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    const sanitizedQuery = query.replace(/[%_]/g, '\\$&').trim();
+    const searchPattern = `%${sanitizedQuery}%`;
+
     const { data, error, count } = await supabase
       .from('blogs')
       .select(`
@@ -94,7 +97,7 @@ export const blogService = {
         category:categories(id, name, slug)
       `, { count: 'exact' })
       .eq('published', true)
-      .or(`title.ilike.%${query}%,excerpt.ilike.%${query}%`)
+      .or(`title.ilike.${searchPattern},excerpt.ilike.${searchPattern}`)
       .order('published_at', { ascending: false })
       .range(from, to);
 

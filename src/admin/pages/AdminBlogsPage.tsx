@@ -82,32 +82,35 @@ export const AdminBlogsPage = () => {
     borderRadius: theme.borderRadius.md,
     border: 'none',
     backgroundColor: theme.colors.accent,
-    color: '#ffffff',
+    color: theme.colors.background,
     cursor: 'pointer',
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     textDecoration: 'none',
     transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
   };
 
   const tableStyle: React.CSSProperties = {
     width: '100%',
     borderCollapse: 'collapse',
     marginBottom: theme.spacing.xl,
+    minWidth: '500px',
   };
 
   const thStyle: React.CSSProperties = {
-    padding: theme.spacing.md,
+    padding: `${theme.spacing.md} ${theme.spacing.sm}`,
     textAlign: 'left',
     borderBottom: `2px solid ${theme.colors.border}`,
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.textMuted,
     backgroundColor: theme.colors.surface,
+    whiteSpace: 'nowrap',
   };
 
   const tdStyle: React.CSSProperties = {
-    padding: theme.spacing.md,
+    padding: `${theme.spacing.md} ${theme.spacing.sm}`,
     borderBottom: `1px solid ${theme.colors.border}`,
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text,
@@ -116,7 +119,7 @@ export const AdminBlogsPage = () => {
   const titleCellStyle: React.CSSProperties = {
     ...tdStyle,
     fontWeight: theme.typography.fontWeight.semibold,
-    maxWidth: '300px',
+    maxWidth: '200px',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -124,33 +127,36 @@ export const AdminBlogsPage = () => {
 
   const statusBadgeStyle = (published: boolean): React.CSSProperties => ({
     display: 'inline-block',
-    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
     borderRadius: theme.borderRadius.sm,
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     backgroundColor: published ? '#dcfce7' : '#fef3c7',
     color: published ? '#166534' : '#92400e',
+    whiteSpace: 'nowrap',
   });
 
   const actionsStyle: React.CSSProperties = {
     ...tdStyle,
     display: 'flex',
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
     alignItems: 'center',
+    flexWrap: 'nowrap',
   };
 
   const iconButtonStyle = (disabled: boolean = false): React.CSSProperties => ({
-    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+    padding: theme.spacing.xs,
     borderRadius: theme.borderRadius.sm,
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'transparent',
     cursor: disabled ? 'not-allowed' : 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    justifyContent: 'center',
     fontSize: theme.typography.fontSize.xs,
     opacity: disabled ? 0.5 : 1,
     transition: 'all 0.2s',
+    minWidth: '32px',
   });
 
   const paginationStyle: React.CSSProperties = {
@@ -159,6 +165,7 @@ export const AdminBlogsPage = () => {
     alignItems: 'center',
     gap: theme.spacing.md,
     marginTop: theme.spacing['2xl'],
+    flexWrap: 'wrap',
   };
 
   const pageButtonStyle = (disabled: boolean): React.CSSProperties => ({
@@ -196,7 +203,7 @@ export const AdminBlogsPage = () => {
         </p>
       ) : blogs.length > 0 ? (
         <>
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{ overflowX: 'auto' }} className="admin-table-responsive">
             <table style={tableStyle}>
               <thead>
                 <tr>
@@ -237,7 +244,7 @@ export const AdminBlogsPage = () => {
                       </Link>
                       <button
                         onClick={() => handleDelete(blog)}
-                        style={{ ...iconButtonStyle(deletingId === blog.id), color: '#dc2626' }}
+                        style={{ ...iconButtonStyle(deletingId === blog.id), color: theme.colors.error }}
                         disabled={deletingId === blog.id}
                       >
                         <Trash2 size={16} />

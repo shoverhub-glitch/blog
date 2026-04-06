@@ -84,11 +84,11 @@ export const HomePage = () => {
         .hero-card:hover { transform: scale(1.01); }
         .hero-card:hover .hero-img { transform: scale(1.04); }
         .hero-img { transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); width: 100%; height: 100%; object-fit: cover; display: block; }
-        .cat-pill { display: inline-block; padding: 0.3rem 0.875rem; background: ${theme.colors.accent}; color: #fff; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; font-family: ${theme.typography.fontFamily}; margin-bottom: 0.875rem; }
+        .cat-pill { display: inline-block; padding: 0.3rem 0.875rem; background: ${theme.colors.accent}; color: #fff; font-size: ${isMobile ? '0.625rem' : '0.6875rem'}; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; border-radius: 2px; font-family: ${theme.typography.fontFamily}; margin-bottom: 0.875rem; }
         .section-rule { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
         .section-rule::after { content: ''; flex: 1; height: 1px; background: ${theme.colors.border}; }
         .section-label { font-family: ${theme.typography.fontFamily}; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: ${theme.colors.textMuted}; white-space: nowrap; }
-        .filter-btn { font-family: ${theme.typography.fontFamily}; font-size: 0.8125rem; font-weight: 500; padding: 0.5rem 1rem; border-radius: 100px; cursor: pointer; transition: all 0.2s; border: 1px solid ${theme.colors.border}; white-space: nowrap; }
+        .filter-btn { font-family: ${theme.typography.fontFamily}; font-size: ${isMobile ? '0.75rem' : '0.8125rem'}; font-weight: 500; padding: 0.5rem 1rem; border-radius: 100px; cursor: pointer; transition: all 0.2s; border: 1px solid ${theme.colors.border}; white-space: nowrap; }
         .filter-btn:hover { border-color: ${theme.colors.text}; }
         .page-btn { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; border-radius: 4px; border: 1px solid ${theme.colors.border}; background: transparent; color: ${theme.colors.text}; cursor: pointer; font-size: 0.875rem; font-weight: 500; font-family: ${theme.typography.fontFamily}; transition: all 0.2s; }
         .page-btn:hover:not(:disabled) { background: ${theme.colors.surface}; border-color: ${theme.colors.text}; }
@@ -97,7 +97,8 @@ export const HomePage = () => {
         .trending-item:last-child { border-bottom: none; }
         .trending-item:hover .t-title { color: ${theme.colors.accent}; }
         .t-title { transition: color 0.2s; font-family: ${theme.typography.displayFont}; }
-        .view-all-btn { display: inline-flex; align-items: center; gap: 0.5rem; font-family: ${theme.typography.fontFamily}; font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${theme.colors.accent}; text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid ${theme.colors.accent}; transition: all 0.2s; }
+        .t-cat { font-size: ${isMobile ? '0.6875rem' : '0.625rem'} !important; }
+        .view-all-btn { display: inline-flex; align-items: center; gap: 0.5rem; font-family: ${theme.typography.fontFamily}; font-size: ${isMobile ? '0.75rem' : '0.8125rem'}; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: ${theme.colors.accent}; text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid ${theme.colors.accent}; transition: all 0.2s; }
         .view-all-btn:hover { gap: 0.75rem; }
       `}</style>
 
@@ -262,7 +263,7 @@ export const HomePage = () => {
                           </span>
                           <div>
                             {blog.category && (
-                              <span style={{ fontSize: '0.625rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.accent }}>
+                              <span className="t-cat" style={{ fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: theme.colors.accent }}>
                                 {blog.category.name}
                               </span>
                             )}

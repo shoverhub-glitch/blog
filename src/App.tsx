@@ -6,6 +6,7 @@ import { ProtectedRoute } from './admin/components/ProtectedRoute';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { BlogCardSkeleton } from './components/Skeleton';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
 const BlogDetailPage = lazy(() => import('./pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
@@ -21,6 +22,7 @@ const AdminDashboard = lazy(() => import('./admin/pages/AdminDashboard').then(m 
 const AdminBlogsPage = lazy(() => import('./admin/pages/AdminBlogsPage').then(m => ({ default: m.AdminBlogsPage })));
 const AdminBlogEditorPage = lazy(() => import('./admin/pages/AdminBlogEditorPage').then(m => ({ default: m.AdminBlogEditorPage })));
 const AdminCategoriesPage = lazy(() => import('./admin/pages/AdminCategoriesPage').then(m => ({ default: m.AdminCategoriesPage })));
+
 
 const LoadingFallback = () => (
   <div style={{ 
@@ -46,36 +48,39 @@ const PublicLayout = () => (
 
 function App() {
   return (
-    <ThemeProvider>
-      <AdminAuthProvider>
-        <Router>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/shover-admin/login" element={<AdminLoginPage />} />
-              <Route path="/shover-admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-              <Route path="/shover-admin/blogs" element={<ProtectedRoute><AdminBlogsPage /></ProtectedRoute>} />
-              <Route path="/shover-admin/blogs/new" element={<ProtectedRoute><AdminBlogEditorPage /></ProtectedRoute>} />
-              <Route path="/shover-admin/blogs/:id/edit" element={<ProtectedRoute><AdminBlogEditorPage /></ProtectedRoute>} />
-              <Route path="/shover-admin/categories" element={<ProtectedRoute><AdminCategoriesPage /></ProtectedRoute>} />
-              <Route path="/shover-admin" element={<Navigate to="/shover-admin/dashboard" replace />} />
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AdminAuthProvider>
+          <Router>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/shover-admin/login" element={<AdminLoginPage />} />
+                <Route path="/shover-admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="/shover-admin/blogs" element={<ProtectedRoute><AdminBlogsPage /></ProtectedRoute>} />
+                <Route path="/shover-admin/blogs/new" element={<ProtectedRoute><AdminBlogEditorPage /></ProtectedRoute>} />
+                <Route path="/shover-admin/blogs/:id/edit" element={<ProtectedRoute><AdminBlogEditorPage /></ProtectedRoute>} />
+                <Route path="/shover-admin/categories" element={<ProtectedRoute><AdminCategoriesPage /></ProtectedRoute>} />
 
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/blog/:slug" element={<BlogDetailPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-              </Route>
+                <Route path="/shover-admin" element={<Navigate to="/shover-admin/dashboard" replace />} />
 
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </AdminAuthProvider>
-    </ThemeProvider>
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/blog/:slug" element={<BlogDetailPage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                </Route>
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </AdminAuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

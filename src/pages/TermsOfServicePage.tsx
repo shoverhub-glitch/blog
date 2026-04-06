@@ -14,7 +14,7 @@ export const TermsOfServicePage = () => {
 
   const headingStyle: React.CSSProperties = {
     fontFamily: theme.typography.displayFont,
-    fontSize: '1.5rem',
+    fontSize: isMobile ? '1.25rem' : '1.5rem',
     fontWeight: 700,
     color: theme.colors.text,
     marginBottom: '1rem',

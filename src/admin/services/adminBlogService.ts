@@ -11,66 +11,135 @@ export interface BlogFormData {
   published: boolean;
   published_at?: string | null;
   featured: boolean;
+  tags?: string;
 }
 
 export const adminBlogService = {
-  async createBlog(data: BlogFormData & { tags?: string[] }): Promise<Blog> {
+  async createBlog(data: BlogFormData): Promise<Blog> {
     try {
-      const { tags, ...blogData } = data;
-      const normalizedData = {
-        ...blogData,
-        author_name: 'sampleHub Team',
+      const tagsString = data.tags || '';
+      const tagNames = tagsString.split(',').map(t => t.trim()).filter(Boolean);
+      
+      const blogData = {
+        title: data.title,
+        slug: data.slug,
+        content: data.content,
+        excerpt: data.excerpt,
+        cover_image: data.cover_image,
+        category_id: data.category_id,
+        published: data.published,
+        featured: data.featured,
+        author_name: 'ShoverHub Team',
         view_count: 0,
-        published_at: blogData.published
-          ? blogData.published_at || new Date().toISOString()
-          : null,
+        tags: data.tags || '',
+        published_at: data.published ? data.published_at || new Date().toISOString() : null,
       };
 
       const { data: blog, error } = await supabase
         .from('blogs')
-        .insert([normalizedData])
-        .select('*')
+        .insert(blogData)
+        .select()
         .single();
 
       if (error) throw error;
 
-      if (tags && tags.length > 0 && blog) {
-        await this.updateBlogTags(blog.id, tags);
+      if (tagNames.length > 0) {
+        for (const tagName of tagNames) {
+          const { data: existingTags } = await supabase
+            .from('tags')
+            .select('*')
+            .ilike('name', tagName)
+            .limit(1);
+          
+          let existingTag = existingTags?.[0];
+          
+          if (!existingTag) {
+            const { data: newTag } = await supabase
+              .from('tags')
+              .insert({ 
+                name: tagName, 
+                slug: tagName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') 
+              })
+              .select()
+              .single();
+            
+            if (newTag) existingTag = newTag;
+          }
+          
+          if (existingTag) {
+            await supabase
+              .from('blog_tags')
+              .insert({ blog_id: blog.id, tag_id: existingTag.id });
+          }
+        }
       }
 
       return blog;
-    } catch (error) {
-      console.error('Failed to create blog:', error);
-      throw error;
+    } catch (err) {
+      console.error('Create blog error:', err);
+      throw err;
     }
   },
 
-  async updateBlog(
-    blogId: string,
-    data: Partial<BlogFormData> & { tags?: string[] }
-  ): Promise<Blog> {
+  async updateBlog(blogId: string, data: Partial<BlogFormData>): Promise<Blog> {
     try {
-      const { tags, ...blogData } = data;
+      const tagsString = data.tags;
+      const tagNames = tagsString ? tagsString.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-      const updateData = {
+      const { tags, ...blogData } = data as BlogFormData;
+
+      const updateData: Record<string, unknown> = {
         ...blogData,
-        ...(blogData.published === true && !blogData.published_at
+        ...(blogData?.published === true && !blogData?.published_at
           ? { published_at: new Date().toISOString() }
           : {}),
         updated_at: new Date().toISOString(),
       };
 
+      if (tagsString !== undefined) {
+        delete updateData.tags;
+      }
+
       const { data: blog, error } = await supabase
         .from('blogs')
         .update(updateData)
         .eq('id', blogId)
-        .select('*')
+        .select()
         .single();
 
       if (error) throw error;
 
-      if (tags && blog) {
-        await this.updateBlogTags(blogId, tags);
+      if (tagNames.length > 0 || tagsString === '') {
+        await supabase.from('blog_tags').delete().eq('blog_id', blogId);
+
+        for (const tagName of tagNames) {
+          const { data: existingTags } = await supabase
+            .from('tags')
+            .select('*')
+            .ilike('name', tagName)
+            .limit(1);
+          
+          let existingTag = existingTags?.[0];
+          
+          if (!existingTag) {
+            const { data: newTag } = await supabase
+              .from('tags')
+              .insert({ 
+                name: tagName, 
+                slug: tagName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') 
+              })
+              .select()
+              .single();
+            
+            if (newTag) existingTag = newTag;
+          }
+          
+          if (existingTag) {
+            await supabase
+              .from('blog_tags')
+              .insert({ blog_id: blogId, tag_id: existingTag.id });
+          }
+        }
       }
 
       return blog;
@@ -95,7 +164,7 @@ export const adminBlogService = {
       if (error) throw error;
 
       if (data && data.blog_tags) {
-        data.tags = data.blog_tags.map((bt: any) => bt.tag);
+        data.tags_list = data.blog_tags.map((bt: { tag: Tag }) => bt.tag);
         delete data.blog_tags;
       }
 
@@ -138,31 +207,13 @@ export const adminBlogService = {
         await imageService.deleteImage(imageUrl);
       }
 
+      await supabase.from('blog_tags').delete().eq('blog_id', blogId);
+
       const { error } = await supabase.from('blogs').delete().eq('id', blogId);
 
       if (error) throw error;
     } catch (error) {
       console.error('Failed to delete blog:', error);
-      throw error;
-    }
-  },
-
-  async updateBlogTags(blogId: string, tagIds: string[]): Promise<void> {
-    try {
-      await supabase.from('blog_tags').delete().eq('blog_id', blogId);
-
-      if (tagIds.length > 0) {
-        const tagRecords = tagIds.map((tagId) => ({
-          blog_id: blogId,
-          tag_id: tagId,
-        }));
-
-        const { error } = await supabase.from('blog_tags').insert(tagRecords);
-
-        if (error) throw error;
-      }
-    } catch (error) {
-      console.error('Failed to update tags:', error);
       throw error;
     }
   },

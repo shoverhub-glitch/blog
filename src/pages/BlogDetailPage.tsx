@@ -50,12 +50,14 @@ export const BlogDetailPage = () => {
     if (navigator.share && blog) {
       try {
         await navigator.share({ title: blog.title, text: blog.excerpt, url: window.location.href });
-      } catch { }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      setShared(true);
-      setTimeout(() => setShared(false), 2000);
+        return;
+      } catch {
+        // Fallback to clipboard if share fails or is cancelled
+      }
     }
+    navigator.clipboard.writeText(window.location.href);
+    setShared(true);
+    setTimeout(() => setShared(false), 2000);
   };
 
   const estimateReadTime = (content: string) => {
@@ -79,25 +81,25 @@ export const BlogDetailPage = () => {
   return (
     <>
       <style>{`
-        .article-body { font-family: ${theme.typography.fontFamily}; font-size: 1.125rem; line-height: 1.85; color: ${theme.colors.textSecondary}; }
+        .article-body { font-family: ${theme.typography.fontFamily}; font-size: ${isMobile ? '1rem' : '1.125rem'}; line-height: 1.85; color: ${theme.colors.textSecondary}; }
         .article-body h1, .article-body h2, .article-body h3, .article-body h4 {
           font-family: ${theme.typography.displayFont};
           color: ${theme.colors.text};
           margin: 2.5rem 0 1rem;
           line-height: 1.2;
         }
-        .article-body h2 { font-size: 1.75rem; }
-        .article-body h3 { font-size: 1.375rem; }
+        .article-body h2 { font-size: ${isMobile ? '1.375rem' : '1.75rem'}; }
+        .article-body h3 { font-size: ${isMobile ? '1.125rem' : '1.375rem'}; }
         .article-body p { margin: 0 0 1.75rem; }
         .article-body a { color: ${theme.colors.accent}; text-decoration: underline; text-underline-offset: 3px; }
         .article-body blockquote {
           border-left: 3px solid ${theme.colors.accent};
           margin: 2rem 0;
-          padding: 1.25rem 1.75rem;
+          padding: 1.25rem 1.5rem;
           background: ${theme.colors.surface};
           border-radius: 0 8px 8px 0;
           font-family: ${theme.typography.displayFont};
-          font-size: 1.25rem;
+          font-size: ${isMobile ? '1rem' : '1.25rem'};
           font-style: italic;
           color: ${theme.colors.text};
         }
@@ -115,14 +117,14 @@ export const BlogDetailPage = () => {
           background: ${theme.colors.surface};
           border: 1px solid ${theme.colors.border};
           border-radius: 8px;
-          padding: 1.5rem;
+          padding: 1rem;
           overflow-x: auto;
           margin: 2rem 0;
         }
         .article-body pre code { background: none; border: none; padding: 0; }
-        .share-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 4px; border: 1px solid ${theme.colors.border}; background: transparent; color: ${theme.colors.text}; cursor: pointer; font-size: 0.8125rem; font-weight: 500; font-family: ${theme.typography.fontFamily}; transition: all 0.2s; }
+        .share-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 4px; border: 1px solid ${theme.colors.border}; background: transparent; color: ${theme.colors.text}; cursor: pointer; font-size: ${isMobile ? '0.875rem' : '0.8125rem'}; font-weight: 500; font-family: ${theme.typography.fontFamily}; transition: all 0.2s; }
         .share-btn:hover { background: ${theme.colors.surface}; border-color: ${theme.colors.text}; }
-        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: ${theme.colors.textMuted}; text-decoration: none; font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.05em; transition: color 0.2s; font-family: ${theme.typography.fontFamily}; }
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; color: ${theme.colors.textMuted}; text-decoration: none; font-size: ${isMobile ? '0.875rem' : '0.8125rem'}; font-weight: 500; letter-spacing: 0.05em; transition: color 0.2s; font-family: ${theme.typography.fontFamily}; }
         .back-link:hover { color: ${theme.colors.accent}; }
         .tag-pill { display: inline-block; padding: 0.3rem 0.875rem; background: ${theme.colors.surface}; border: 1px solid ${theme.colors.border}; border-radius: 100px; font-size: 0.8125rem; color: ${theme.colors.textMuted}; font-family: ${theme.typography.fontFamily}; transition: all 0.2s; }
         .tag-pill:hover { border-color: ${theme.colors.text}; color: ${theme.colors.text}; }
@@ -207,7 +209,7 @@ export const BlogDetailPage = () => {
                 display: 'inline-block',
                 padding: '0.25rem 0.75rem',
                 background: theme.colors.accent,
-                color: '#fff',
+                color: theme.colors.background,
                 fontSize: '0.625rem',
                 fontWeight: 600,
                 letterSpacing: '0.12em',

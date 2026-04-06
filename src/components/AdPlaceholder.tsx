@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../theme/ThemeContext';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { config } from '../config';
 
 interface AdPlaceholderProps {
@@ -15,7 +16,9 @@ function isAdminRoute() {
 
 export const AdPlaceholder = ({ slot, format = 'auto', className = '' }: AdPlaceholderProps) => {
   const { theme } = useTheme();
+  const isMobile = useMediaQuery('(max-width: 640px)');
   const adRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (isAdminRoute()) return;
@@ -25,34 +28,47 @@ export const AdPlaceholder = ({ slot, format = 'auto', className = '' }: AdPlace
       ins.style.display = 'block';
       ins.setAttribute('data-ad-client', config.adsensePublisherId);
       ins.setAttribute('data-ad-slot', slot);
-      ins.setAttribute('data-ad-format', format);
+      ins.setAttribute('data-ad-format', 'auto');
+      if (isMobile) {
+        ins.style.width = '100%';
+        ins.style.minHeight = '90px';
+        ins.style.maxWidth = '100%';
+      }
       adRef.current.appendChild(ins);
+      setIsVisible(true);
       try {
-        // @ts-ignore
+        // @ts-expect-error - adsbygoogle may not be defined
         (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        // ignore
+      } catch {
+        setIsVisible(false);
       }
     }
     const timer = setTimeout(() => {
       if (adRef.current) {
         const ins = adRef.current.querySelector('ins.adsbygoogle');
-        if (!ins || ins.childNodes.length === 0) {
+        if (!ins || ins.clientHeight === 0 || ins.childNodes.length === 0) {
           adRef.current.style.display = 'none';
+          setIsVisible(false);
         }
       }
-    }, 1500);
+    }, 2000);
     return () => clearTimeout(timer);
-  }, [slot, format]);
+  }, [slot, format, isMobile]);
 
-  // Never render on admin
   if (isAdminRoute()) return null;
+  if (!isVisible) return null;
 
   return (
     <div
       ref={adRef}
       className={className}
-      style={{ minHeight: '100px', marginBottom: theme.spacing.lg, transition: 'all 0.3s ease' }}
+      style={{ 
+        marginBottom: theme.spacing.lg, 
+        transition: 'all 0.3s ease',
+        width: '100%',
+        maxWidth: '100%',
+        overflow: 'hidden',
+      }}
     />
   );
 };

@@ -36,7 +36,7 @@ export const CategoriesPage = () => {
         .cat-card:hover .cat-arrow { opacity: 1; transform: translate(0, 0) rotate(0deg); }
         .cat-card:hover .cat-number { transform: scale(1.15); }
         .cat-arrow { transition: all 0.3s ease; opacity: 0; transform: translate(-6px, 6px) rotate(-10deg); }
-        .cat-number { transition: transform 0.35s ease; display: block; font-family: '${theme.typography.displayFont}'; font-size: 4rem; font-weight: 900; opacity: 0.12; line-height: 1; margin-bottom: 0.5rem; }
+        .cat-number { transition: transform 0.35s ease; display: block; font-family: '${theme.typography.displayFont}'; font-size: ${isMobile ? '2.5rem' : '4rem'}; font-weight: 900; opacity: 0.12; line-height: 1; margin-bottom: 0.5rem; }
       `}</style>
 
       <SEO
@@ -104,7 +104,7 @@ export const CategoriesPage = () => {
           </h1>
           <p style={{
             fontFamily: theme.typography.fontFamily,
-            fontSize: '1.125rem',
+            fontSize: isMobile ? '1rem' : '1.125rem',
             color: theme.colors.textMuted,
             margin: 0,
             maxWidth: '480px',
@@ -174,7 +174,7 @@ export const CategoriesPage = () => {
                     <span className="cat-number" style={{ color: getCategoryColors(theme, 0).accent }}>01</span>
                     <h2 style={{
                       fontFamily: theme.typography.displayFont,
-                      fontSize: '2.5rem',
+                      fontSize: isMobile ? '1.75rem' : '2.5rem',
                       fontWeight: 700,
                       color: getCategoryColors(theme, 0).text,
                       margin: '0 0 0.75rem',
@@ -240,7 +240,7 @@ export const CategoriesPage = () => {
                         </span>
                         <h3 style={{
                           fontFamily: theme.typography.displayFont,
-                          fontSize: '1.375rem',
+                          fontSize: isMobile ? '1.125rem' : '1.375rem',
                           fontWeight: 700,
                           color: colors.text,
                           margin: '0 0 0.5rem',

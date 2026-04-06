@@ -4,7 +4,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { AdminSEO } from '../components/AdminSEO';
 import { adminBlogService, BlogFormData } from '../services/adminBlogService';
 import { imageService, ImageValidationError } from '../services/imageService';
-import { Category, Tag } from '../../lib/supabase';
+import { Category } from '../../lib/supabase';
 import { Save, X, Upload, AlertCircle, Loader, Crop } from 'lucide-react';
 import { MdEditor } from 'md-editor-rt';
 import 'md-editor-rt/lib/style.css';
@@ -29,9 +29,7 @@ export const AdminBlogEditorPage = () => {
     featured: false,
   });
 
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(isEditing);
@@ -51,17 +49,13 @@ export const AdminBlogEditorPage = () => {
 
   const loadInitialData = async () => {
     try {
-      const [cats, tgs] = await Promise.all([
-        adminBlogService.getCategories(),
-        adminBlogService.getTags(),
-      ]);
-
+      const cats = await adminBlogService.getCategories();
       setCategories(cats);
-      setTags(tgs);
 
       if (isEditing && id) {
         const blog = await adminBlogService.getBlogById(id);
         if (blog) {
+          const tagNames = blog.tags_list?.map((t) => t.name).join(', ') || '';
           setFormData({
             title: blog.title,
             slug: blog.slug,
@@ -71,9 +65,9 @@ export const AdminBlogEditorPage = () => {
             category_id: blog.category_id,
             published: blog.published,
             featured: blog.featured,
+            tags: tagNames,
           });
           setPreviewImage(blog.cover_image);
-          setSelectedTags(blog.tags?.map((t) => t.id) || []);
         }
       }
     } catch (err) {
@@ -121,7 +115,7 @@ export const AdminBlogEditorPage = () => {
         return;
       }
 
-      const dataToSave = { ...formData, tags: selectedTags };
+      const { tags, ...blogDataWithoutTags } = formData;
       let tempImageUrl: string | null = null;
 
       if (isEditing && id) {
@@ -134,9 +128,9 @@ export const AdminBlogEditorPage = () => {
           }
         }
 
-        await adminBlogService.updateBlog(id, { ...dataToSave, cover_image: imageUrl });
+        await adminBlogService.updateBlog(id, { ...blogDataWithoutTags, cover_image: imageUrl });
       } else {
-        const newBlog = await adminBlogService.createBlog(dataToSave);
+        const newBlog = await adminBlogService.createBlog(blogDataWithoutTags);
         if (newBlog && pendingImage) {
           tempImageUrl = await imageService.uploadBlogImage(newBlog.id, pendingImage);
           await adminBlogService.updateBlog(newBlog.id, { cover_image: tempImageUrl });
@@ -144,8 +138,9 @@ export const AdminBlogEditorPage = () => {
       }
 
       navigate('/shover-admin/blogs');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save blog');
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Failed to save blog');
     } finally {
       setSaving(false);
     }
@@ -240,7 +235,7 @@ export const AdminBlogEditorPage = () => {
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
           }
         }
-      } catch (err) {
+      } catch {
         setError('Failed to upload image');
       } finally {
         setUploadingImage(false);
@@ -279,6 +274,7 @@ export const AdminBlogEditorPage = () => {
   };
 
   const imageUploadStyle: React.CSSProperties = {
+    width: '100%',
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.md,
     border: `2px dashed ${theme.colors.border}`,
@@ -286,19 +282,28 @@ export const AdminBlogEditorPage = () => {
     textAlign: 'center',
     cursor: 'pointer',
     transition: 'all 0.2s',
+    boxSizing: 'border-box',
+  };
+
+  const previewImageContainerStyle: React.CSSProperties = {
+    width: '100%',
+    marginBottom: theme.spacing.lg,
+    boxSizing: 'border-box',
   };
 
   const previewImageStyle: React.CSSProperties = {
+    width: '100%',
     maxWidth: '100%',
     maxHeight: '400px',
     borderRadius: theme.borderRadius.md,
-    marginBottom: theme.spacing.lg,
+    objectFit: 'cover',
   };
 
   const checkboxContainerStyle: React.CSSProperties = {
     display: 'flex',
     gap: theme.spacing.lg,
     alignItems: 'center',
+    flexWrap: 'wrap',
   };
 
   const checkboxStyle: React.CSSProperties = {
@@ -307,28 +312,11 @@ export const AdminBlogEditorPage = () => {
     gap: theme.spacing.sm,
   };
 
-  const tagGridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: theme.spacing.md,
-  };
-
-  const tagButtonStyle = (isSelected: boolean): React.CSSProperties => ({
-    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-    borderRadius: theme.borderRadius.md,
-    border: `1px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
-    backgroundColor: isSelected ? theme.colors.primaryLight : 'transparent',
-    color: isSelected ? theme.colors.primary : theme.colors.text,
-    cursor: 'pointer',
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.medium,
-    transition: 'all 0.2s',
-  });
-
   const buttonGroupStyle: React.CSSProperties = {
     display: 'flex',
     gap: theme.spacing.md,
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   };
 
   const saveButtonStyle: React.CSSProperties = {
@@ -339,12 +327,15 @@ export const AdminBlogEditorPage = () => {
     borderRadius: theme.borderRadius.md,
     border: 'none',
     backgroundColor: theme.colors.accent,
-    color: '#ffffff',
+    color: theme.colors.background,
     cursor: saving ? 'not-allowed' : 'pointer',
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     opacity: saving ? 0.7 : 1,
     transition: 'all 0.2s',
+    flex: '1 1 auto',
+    minWidth: '120px',
+    justifyContent: 'center',
   };
 
   const cancelButtonStyle: React.CSSProperties = {
@@ -360,12 +351,15 @@ export const AdminBlogEditorPage = () => {
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     transition: 'all 0.2s',
+    flex: '1 1 auto',
+    minWidth: '120px',
+    justifyContent: 'center',
   };
 
   const errorStyle: React.CSSProperties = {
-    backgroundColor: '#fee2e2',
-    border: `1px solid #fca5a5`,
-    color: '#991b1b',
+    backgroundColor: theme.colors.errorLight,
+    border: `1px solid ${theme.colors.error}`,
+    color: theme.colors.error,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     display: 'flex',
@@ -447,49 +441,52 @@ export const AdminBlogEditorPage = () => {
 
         <div style={formGroupStyle}>
           <label style={labelStyle}>Cover Image</label>
-          {previewImage && (
-            <div style={{ position: 'relative', marginBottom: theme.spacing.lg }}>
-              <img src={previewImage} alt="Preview" style={previewImageStyle} />
-              <button
-                type="button"
-                onClick={() => {
-                  setPreviewImage(null);
-                  setPendingImage(null);
-                }}
-                style={{
-                  position: 'absolute',
-                  top: theme.spacing.md,
-                  right: theme.spacing.md,
-                  padding: theme.spacing.sm,
-                  backgroundColor: '#000000',
-                  color: '#ffffff',
-                  borderRadius: theme.borderRadius.md,
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <X size={18} />
-              </button>
+          {previewImage ? (
+            <div style={previewImageContainerStyle}>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <img src={previewImage} alt="Preview" style={previewImageStyle} />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewImage(null);
+                    setPendingImage(null);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: theme.spacing.md,
+                    right: theme.spacing.md,
+                    padding: theme.spacing.sm,
+                    backgroundColor: theme.colors.primary,
+                    color: theme.colors.background,
+                    borderRadius: theme.borderRadius.md,
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
+          ) : (
+            <label style={imageUploadStyle}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
+                <Upload size={24} style={{ color: theme.colors.primary }} />
+                <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.text }}>
+                  Click to upload image
+                </span>
+                <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textMuted }}>
+                  (auto-compressed)
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                style={{ display: 'none' }}
+                disabled={saving}
+              />
+            </label>
           )}
-          <label style={imageUploadStyle}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.sm }}>
-              <Upload size={24} style={{ color: theme.colors.primary }} />
-              <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.text }}>
-                Click to upload image
-              </span>
-              <span style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textMuted }}>
-                (auto-compressed)
-              </span>
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              style={{ display: 'none' }}
-              disabled={saving}
-            />
-          </label>
         </div>
 
         <div style={formGroupStyle}>
@@ -543,30 +540,20 @@ export const AdminBlogEditorPage = () => {
           </select>
         </div>
 
-        {tags.length > 0 && (
-          <div style={formGroupStyle}>
-            <label style={labelStyle}>Tags</label>
-            <div style={tagGridStyle}>
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedTags(
-                      selectedTags.includes(tag.id)
-                        ? selectedTags.filter((t) => t !== tag.id)
-                        : [...selectedTags, tag.id]
-                    );
-                  }}
-                  style={tagButtonStyle(selectedTags.includes(tag.id))}
-                  disabled={saving}
-                >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <div style={formGroupStyle}>
+          <label style={labelStyle}>Tags (comma separated)</label>
+          <input
+            type="text"
+            value={formData.tags || ''}
+            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+            style={inputStyle}
+            placeholder="react, javascript, tutorial"
+            disabled={saving}
+          />
+          <p style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textMuted, marginTop: theme.spacing.sm }}>
+            Enter tags separated by commas
+          </p>
+        </div>
 
         <div style={formGroupStyle}>
           <div style={checkboxContainerStyle}>
@@ -591,7 +578,7 @@ export const AdminBlogEditorPage = () => {
           </div>
         </div>
 
-        <div style={buttonGroupStyle}>
+        <div style={buttonGroupStyle} className="admin-btn-group">
           <button
             type="button"
             onClick={() => navigate('/shover-admin/blogs')}
@@ -704,7 +691,7 @@ export const AdminBlogEditorPage = () => {
                   borderRadius: theme.borderRadius.md,
                   border: 'none',
                   backgroundColor: theme.colors.accent,
-                  color: '#ffffff',
+                  color: theme.colors.background,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
