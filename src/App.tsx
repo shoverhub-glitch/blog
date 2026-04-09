@@ -8,6 +8,7 @@ import { Footer } from './components/Footer';
 import { BlogCardSkeleton } from './components/Skeleton';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
 const BlogDetailPage = lazy(() => import('./pages/BlogDetailPage').then(m => ({ default: m.BlogDetailPage })));
 const SearchPage = lazy(() => import('./pages/SearchPage').then(m => ({ default: m.SearchPage })));
