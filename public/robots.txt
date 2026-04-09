@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /shover-admin/
+Disallow: /admin/
+Disallow: /*/admin/
+
+Sitemap: https://blog.shoverhub.com/sitemap.xml

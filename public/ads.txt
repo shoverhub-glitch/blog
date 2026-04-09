@@ -1,0 +1,7 @@
+# ads.txt - Authorized Digital Sellers for blog.shoverhub.com
+# 
+# TEST MODE - Using Google's test publisher ID for development
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
+#
+# After getting AdSense approval, replace the line above with your actual ads.txt entry
+# You can find your ads.txt content in AdSense account under "Settings" > "Access and authorization"
