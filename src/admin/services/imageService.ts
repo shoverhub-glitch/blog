@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 
 const BUCKET_NAME = 'blog-images';
-const MAX_WIDTH = 800;
-const MAX_HEIGHT = 600;
-const QUALITY = 0.5;
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_WIDTH = 1200;
+const MAX_HEIGHT = 800;
+const QUALITY = 0.8;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export class ImageValidationError extends Error {

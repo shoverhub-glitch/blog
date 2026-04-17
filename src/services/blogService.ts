@@ -1,15 +1,7 @@
 import { supabase, Blog, Category, Tag } from '../lib/supabase';
 
-const CACHE_DURATION = 5 * 60 * 1000;
 const COUNT_MODE = 'planned' as const;
-
-const cache = new Map<string, { data: unknown; timestamp: number }>();
 const inFlightRequests = new Map<string, Promise<unknown>>();
-
-interface SearchBlogsRpcPayload {
-  total: number;
-  blogs: Blog[];
-}
 
 const slugifyTag = (value: string): string => value
   .toLowerCase()
@@ -53,18 +45,6 @@ const derivePopularTagsFromBlogs = async (limit: number): Promise<Tag[]> => {
     }));
 };
 
-const getCached = <T>(key: string): T | null => {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data as T;
-  }
-  return null;
-};
-
-const setCache = (key: string, data: unknown) => {
-  cache.set(key, { data, timestamp: Date.now() });
-};
-
 const runWithDedup = <T>(requestKey: string, requestFn: () => Promise<T>): Promise<T> => {
   const pending = inFlightRequests.get(requestKey);
   if (pending) return pending as Promise<T>;
@@ -79,11 +59,7 @@ const runWithDedup = <T>(requestKey: string, requestFn: () => Promise<T>): Promi
 
 export const blogService = {
   async getFeaturedBlogs(limit: number = 3): Promise<Blog[]> {
-    const cacheKey = `featured-${limit}`;
-    const cached = getCached<Blog[]>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = `req-featured-${limit}`;
     return runWithDedup(requestKey, async () => {
       const { data, error } = await supabase
         .from('blogs')
@@ -97,18 +73,12 @@ export const blogService = {
         .limit(limit);
 
       if (error) throw error;
-      const result = (data || []) as unknown as Blog[];
-      setCache(cacheKey, result);
-      return result;
+      return (data || []) as unknown as Blog[];
     });
   },
 
   async getTrendingBlogs(limit: number = 5): Promise<Blog[]> {
-    const cacheKey = `trending-${limit}`;
-    const cached = getCached<Blog[]>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = `req-trending-${limit}`;
     return runWithDedup(requestKey, async () => {
       const { data, error } = await supabase
         .from('blogs')
@@ -121,18 +91,12 @@ export const blogService = {
         .limit(limit);
 
       if (error) throw error;
-      const result = (data || []) as unknown as Blog[];
-      setCache(cacheKey, result);
-      return result;
+      return (data || []) as unknown as Blog[];
     });
   },
 
   async getLatestBlogs(page: number = 1, limit: number = 12): Promise<{ blogs: Blog[], total: number }> {
-    const cacheKey = `latest-${page}-${limit}`;
-    const cached = getCached<{ blogs: Blog[]; total: number }>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = `req-latest-${page}-${limit}`;
     return runWithDedup(requestKey, async () => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
@@ -148,9 +112,7 @@ export const blogService = {
         .range(from, to);
 
       if (error) throw error;
-      const result = { blogs: (data || []) as unknown as Blog[], total: count || 0 };
-      setCache(cacheKey, result);
-      return result;
+      return { blogs: (data || []) as unknown as Blog[], total: count || 0 };
     });
   },
 
@@ -194,10 +156,9 @@ export const blogService = {
       });
 
       if (!rpcError && rpcData) {
-        const payload = rpcData as SearchBlogsRpcPayload;
         return {
-          blogs: Array.isArray(payload.blogs) ? payload.blogs : [],
-          total: Number(payload.total) || 0,
+          blogs: Array.isArray((rpcData as { blogs?: Blog[] }).blogs) ? (rpcData as { blogs: Blog[] }).blogs : [],
+          total: Number((rpcData as { total?: number }).total) || 0,
         };
       }
 
@@ -225,11 +186,7 @@ export const blogService = {
   },
 
   async getBlogsByCategory(categorySlug: string, page: number = 1, limit: number = 12): Promise<{ blogs: Blog[], total: number }> {
-    const cacheKey = `category-${categorySlug}-${page}-${limit}`;
-    const cached = getCached<{ blogs: Blog[]; total: number }>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = `req-category-${categorySlug}-${page}-${limit}`;
     return runWithDedup(requestKey, async () => {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
@@ -241,9 +198,7 @@ export const blogService = {
         .maybeSingle();
 
       if (!category) {
-        const emptyResult = { blogs: [], total: 0 };
-        setCache(cacheKey, emptyResult);
-        return emptyResult;
+        return { blogs: [], total: 0 };
       }
 
       const { data, error, count } = await supabase
@@ -258,9 +213,7 @@ export const blogService = {
         .range(from, to);
 
       if (error) throw error;
-      const result = { blogs: (data || []) as unknown as Blog[], total: count || 0 };
-      setCache(cacheKey, result);
-      return result;
+      return { blogs: (data || []) as unknown as Blog[], total: count || 0 };
     });
   },
 
@@ -289,11 +242,7 @@ export const blogService = {
   },
 
   async getAllCategories(): Promise<Category[]> {
-    const cacheKey = 'categories-all';
-    const cached = getCached<Category[]>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = 'req-categories-all';
     return runWithDedup(requestKey, async () => {
       const { data, error } = await supabase
         .from('categories')
@@ -301,40 +250,25 @@ export const blogService = {
         .order('name');
 
       if (error) throw error;
-      const result = (data || []) as unknown as Category[];
-      setCache(cacheKey, result);
-      return result;
+      return (data || []) as unknown as Category[];
     });
   },
 
   async getAllTags(): Promise<Tag[]> {
-    const cacheKey = 'tags-all';
-    const cached = getCached<Tag[]>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = 'req-tags-all';
     return runWithDedup(requestKey, async () => {
-      const result = await derivePopularTagsFromBlogs(100);
-      setCache(cacheKey, result);
-      return result;
+      return derivePopularTagsFromBlogs(100);
     });
   },
 
   async getPopularTags(limit: number = 10): Promise<Tag[]> {
-    const cacheKey = `tags-popular-${limit}`;
-    const cached = getCached<Tag[]>(cacheKey);
-    if (cached) return cached;
-
-    const requestKey = `req-${cacheKey}`;
+    const requestKey = `req-tags-popular-${limit}`;
     return runWithDedup(requestKey, async () => {
-      const result = await derivePopularTagsFromBlogs(limit);
-      setCache(cacheKey, result);
-      return result;
+      return derivePopularTagsFromBlogs(limit);
     });
   },
 
-  clearCache() {
-    cache.clear();
+  clearInFlightRequests() {
     inFlightRequests.clear();
   },
 };

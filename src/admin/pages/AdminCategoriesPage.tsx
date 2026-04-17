@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../theme/ThemeContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { AdminSEO } from '../components/AdminSEO';
 import { Category } from '../../lib/supabase';
 import { categoryService, CategoryFormData } from '../services/categoryService';
@@ -8,6 +9,7 @@ import { AdminPageShell } from '../components/AdminPageShell';
 
 export const AdminCategoriesPage = () => {
   const { theme } = useTheme();
+  const isMobile = useMediaQuery('(max-width: 640px)');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

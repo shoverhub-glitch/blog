@@ -40,9 +40,12 @@ export const categoryService = {
 
   async create(data: CategoryFormData): Promise<Category> {
     try {
+      const nameLower = data.name.toLowerCase().trim();
+      const slugLower = data.slug.toLowerCase().trim();
+      
       const { data: category, error } = await supabase
         .from('categories')
-        .insert([data])
+        .insert([{ ...data, name: nameLower, slug: slugLower }])
         .select('*')
         .single();
 
@@ -56,9 +59,14 @@ export const categoryService = {
 
   async update(id: string, data: Partial<CategoryFormData>): Promise<Category> {
     try {
+      const updateData: { name?: string; slug?: string; description?: string } = {};
+      if (data.name) updateData.name = data.name.toLowerCase().trim();
+      if (data.slug) updateData.slug = data.slug.toLowerCase().trim();
+      if (data.description !== undefined) updateData.description = data.description;
+      
       const { data: category, error } = await supabase
         .from('categories')
-        .update(data)
+        .update(updateData)
         .eq('id', id)
         .select('*')
         .single();

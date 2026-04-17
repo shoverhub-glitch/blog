@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../theme/ThemeContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { AdminSEO } from '../components/AdminSEO';
 import { adminBlogService, BlogFormData } from '../services/adminBlogService';
-import { Category } from '../../lib/supabase';
-import { Save, X, AlertCircle, Loader } from 'lucide-react';
+import { imageService } from '../services/imageService';
+import { supabase, Category } from '../../lib/supabase';
+import { Save, X, AlertCircle, Loader, Upload } from 'lucide-react';
 import { AdminPageShell } from '../components/AdminPageShell';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 
 export const AdminBlogEditorPage = () => {
   const { theme } = useTheme();
+  const isMobile = useMediaQuery('(max-width: 640px)');
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const isEditing = !!id;
@@ -28,20 +31,23 @@ export const AdminBlogEditorPage = () => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(isEditing);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
+  const [categoryInput, setCategoryInput] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [id]);
 
   const loadInitialData = async () => {
+    setLoading(true);
     try {
       const cats = await adminBlogService.getCategories();
       setCategories(cats);
 
-      if (isEditing && id) {
+      if (id) {
         const blog = await adminBlogService.getBlogById(id);
         if (blog) {
           const tagNames = blog.tags_list?.map((t) => t.name).join(', ') || '';
@@ -80,13 +86,32 @@ export const AdminBlogEditorPage = () => {
         return;
       }
 
-      if (isEditing && id) {
-        await adminBlogService.updateBlog(id, { ...formData, cover_image: formData.cover_image || undefined });
-      } else {
-        await adminBlogService.createBlog(formData);
+      let finalCategoryId = formData.category_id;
+
+      if (categoryInput && categoryInput.trim()) {
+        const slug = adminBlogService.generateSlug(categoryInput);
+        const { data, error } = await supabase
+          .from('categories')
+          .insert({ name: categoryInput.trim().toLowerCase(), slug })
+          .select()
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setCategories([...categories, data]);
+          finalCategoryId = data.id;
+        }
       }
 
-      navigate('/shover-admin/blogs');
+      const blogData = { ...formData, category_id: finalCategoryId };
+
+      if (id) {
+        await adminBlogService.updateBlog(id, { ...blogData, cover_image: blogData.cover_image || undefined });
+        navigate('/shover-admin/blogs');
+      } else {
+        const newBlog = await adminBlogService.createBlog(blogData);
+        navigate(`/shover-admin/blogs/${newBlog.id}/edit`);
+      }
     } catch (err) {
       const error = err as { message?: string };
       setError(error.message || 'Failed to save blog');
@@ -100,37 +125,79 @@ export const AdminBlogEditorPage = () => {
     setFormData({ ...formData, slug });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+
+    setUploadingImage(true);
+    try {
+      const imageUrl = await imageService.uploadBlogImage(id, file);
+      setFormData({ ...formData, cover_image: imageUrl });
+      setPreviewImage(imageUrl);
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleCreateCategory = async (catName: string) => {
+    if (!catName.trim()) return;
+
+    try {
+      const slug = adminBlogService.generateSlug(catName);
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({ name: catName.trim(), slug })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCategories([...categories, data]);
+        setFormData({ ...formData, category_id: data.id });
+        setCategoryInput(undefined);
+      }
+    } catch (err) {
+      const error = err as { message?: string };
+      setError(error.message || 'Failed to create category');
+    }
+  };
+
   const formGroupStyle: React.CSSProperties = {
-    marginBottom: theme.spacing.xl,
+    marginBottom: isMobile ? theme.spacing.md : theme.spacing.lg,
   };
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
-    fontSize: theme.typography.fontSize.sm,
+    fontSize: isMobile ? theme.typography.fontSize.xxs : theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   };
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+    padding: isMobile ? theme.spacing.xs : theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: theme.colors.surface,
     color: theme.colors.text,
-    fontSize: theme.typography.fontSize.base,
+    fontSize: isMobile ? theme.typography.fontSize.xs : theme.typography.fontSize.sm,
     outline: 'none',
     transition: 'all 0.2s',
   };
 
   const selectStyle: React.CSSProperties = {
     ...inputStyle,
+    minHeight: isMobile ? '32px' : '38px',
   };
 
   const checkboxContainerStyle: React.CSSProperties = {
     display: 'flex',
-    gap: theme.spacing.lg,
+    gap: isMobile ? theme.spacing.sm : theme.spacing.lg,
     alignItems: 'center',
     flexWrap: 'wrap',
   };
@@ -138,51 +205,51 @@ export const AdminBlogEditorPage = () => {
   const checkboxStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
   };
 
   const buttonGroupStyle: React.CSSProperties = {
     display: 'flex',
-    gap: theme.spacing.md,
+    gap: isMobile ? theme.spacing.sm : theme.spacing.md,
     justifyContent: 'space-between',
     flexWrap: 'wrap',
+    flexDirection: isMobile ? 'column' : 'row',
   };
 
-  const saveButtonStyle: React.CSSProperties = {
+const saveButtonStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    padding: isMobile ? `${theme.spacing.xs} ${theme.spacing.md}` : `${theme.spacing.sm} ${theme.spacing.lg}`,
     borderRadius: theme.borderRadius.md,
     border: 'none',
     backgroundColor: theme.colors.accent,
     color: theme.colors.background,
-    cursor: saving ? 'not-allowed' : 'pointer',
-    fontSize: theme.typography.fontSize.base,
+    fontSize: isMobile ? theme.typography.fontSize.xxs : theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
-    opacity: saving ? 0.7 : 1,
+    cursor: saving ? 'not-allowed' : 'pointer',
+    opacity: saving ? 0.6 : 1,
     transition: 'all 0.2s',
-    flex: '1 1 auto',
-    minWidth: '120px',
-    justifyContent: 'center',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const cancelButtonStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    padding: isMobile ? `${theme.spacing.xs} ${theme.spacing.md}` : `${theme.spacing.sm} ${theme.spacing.lg}`,
     borderRadius: theme.borderRadius.md,
     border: `1px solid ${theme.colors.border}`,
     backgroundColor: 'transparent',
     color: theme.colors.text,
-    cursor: 'pointer',
-    fontSize: theme.typography.fontSize.base,
+    fontSize: isMobile ? theme.typography.fontSize.xxs : theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
+    cursor: saving ? 'not-allowed' : 'pointer',
+    opacity: saving ? 0.6 : 1,
     transition: 'all 0.2s',
-    flex: '1 1 auto',
-    minWidth: '120px',
-    justifyContent: 'center',
+    width: isMobile ? '100%' : 'auto',
   };
 
   const errorStyle: React.CSSProperties = {
@@ -223,7 +290,7 @@ export const AdminBlogEditorPage = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }}>
         <div style={formGroupStyle}>
           <label style={labelStyle}>Title *</label>
           <input
@@ -268,20 +335,44 @@ export const AdminBlogEditorPage = () => {
         </div>
 
         <div style={formGroupStyle}>
-          <label style={labelStyle}>Cover Image URL</label>
-          <input
-            type="url"
-            value={formData.cover_image}
-            onChange={(e) => {
-              setFormData({ ...formData, cover_image: e.target.value });
-              setPreviewImage(e.target.value || null);
-            }}
-            style={inputStyle}
-            placeholder="https://example.com/image.jpg"
-            disabled={saving}
-          />
+          <label style={labelStyle}>Cover Image</label>
+          <div style={{ display: 'flex', gap: theme.spacing.md, flexWrap: 'wrap' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.sm,
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.border}`,
+              backgroundColor: theme.colors.surface,
+              cursor: uploadingImage ? 'not-allowed' : 'pointer',
+              fontSize: theme.typography.fontSize.sm,
+              opacity: uploadingImage ? 0.6 : 1,
+            }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploadingImage || !isEditing}
+                style={{ display: 'none' }}
+              />
+              {uploadingImage ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={16} />}
+              {uploadingImage ? 'Uploading...' : 'Upload Image'}
+            </label>
+            <input
+              type="url"
+              value={formData.cover_image}
+              onChange={(e) => {
+                setFormData({ ...formData, cover_image: e.target.value });
+                setPreviewImage(e.target.value || null);
+              }}
+              style={{ ...inputStyle, flex: '1 1 200px' }}
+              placeholder="Or paste image URL"
+              disabled={saving}
+            />
+          </div>
           <p style={{ fontSize: theme.typography.fontSize.xs, color: theme.colors.textMuted, marginTop: theme.spacing.xs }}>
-            Paste a URL from external image hosting (Unsplash, Picsum, Imgur, etc.)
+            {!isEditing ? 'Save blog first to upload images' : 'Upload from computer or paste a URL'}
           </p>
           {previewImage && (
             <div style={{ marginTop: theme.spacing.md }}>
@@ -335,19 +426,36 @@ export const AdminBlogEditorPage = () => {
 
         <div style={formGroupStyle}>
           <label style={labelStyle}>Category</label>
-          <select
-            value={formData.category_id || ''}
-            onChange={(e) => setFormData({ ...formData, category_id: e.target.value || null })}
-            style={selectStyle}
-            disabled={saving}
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
+            <select
+              value={formData.category_id || categoryInput}
+              onChange={(e) => {
+                if (e.target.value === '__new__') {
+                  setCategoryInput('');
+                } else {
+                  setFormData({ ...formData, category_id: e.target.value || null });
+                  setCategoryInput('');
+                }
+              }}
+              style={{ ...selectStyle, flex: '1 1 200px' }}
+              disabled={saving}
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+              <option value="__new__">Type new...</option>
+            </select>
+            {categoryInput !== undefined && (
+              <input
+                type="text"
+                value={categoryInput || ''}
+                onChange={(e) => setCategoryInput(e.target.value)}
+                placeholder="New category name"
+                style={{ ...inputStyle, flex: '1 1 200px' }}
+              />
+            )}
+          </div>
         </div>
 
         <div style={formGroupStyle}>
@@ -413,7 +521,11 @@ export const AdminBlogEditorPage = () => {
             <X size={18} />
             Cancel
           </button>
-          <button type="submit" style={saveButtonStyle} disabled={saving}>
+          <button 
+            type="submit"
+            style={saveButtonStyle} 
+            disabled={saving}
+          >
             {saving ? (
               <>
                 <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />

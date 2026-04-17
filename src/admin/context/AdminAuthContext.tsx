@@ -26,7 +26,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         setUser(session?.user || null);
 
         if (session?.user) {
-          const isUserAdmin = await checkIfAdmin(session.user.id);
+          const isUserAdmin = await checkIfAdmin(session.user.email || '');
           setIsAdmin(isUserAdmin);
         } else {
           setIsAdmin(false);
@@ -47,7 +47,7 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
         setUser(session?.user || null);
 
         if (session?.user) {
-          const isUserAdmin = await checkIfAdmin(session.user.id);
+          const isUserAdmin = await checkIfAdmin(session.user.email || '');
           setIsAdmin(isUserAdmin);
         } else {
           setIsAdmin(false);
@@ -58,10 +58,14 @@ export const AdminAuthProvider = ({ children }: { children: React.ReactNode }) =
     return () => subscription?.unsubscribe();
   }, []);
 
-  const checkIfAdmin = async (userId: string): Promise<boolean> => {
+  const checkIfAdmin = async (userEmail: string): Promise<boolean> => {
+    if (!userEmail) return false;
     try {
-      const { data, error } = await supabase.rpc('is_admin', { user_id: userId });
-      if (error) throw error;
+      const { data, error } = await supabase.rpc('is_admin', { user_email: userEmail });
+      if (error) {
+        console.warn('is_admin RPC error:', error.message);
+        return false;
+      }
       return data || false;
     } catch (err) {
       console.error('Failed to check admin status:', err);
